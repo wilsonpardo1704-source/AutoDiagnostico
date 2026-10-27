@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoDiagnóstico | Sistema experto</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">AD</div>
+    <div>
+      <p class="eyebrow">SISTEMA EXPERTO</p>
+      <h1>AutoDiagnóstico</h1>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <p class="eyebrow">ASISTENTE AUTOMOTRIZ</p>
+      <h2>Vamos a revisar qué le pasa a tu automóvil.</h2>
+      <p>Responde unas preguntas sencillas. Al final, el sistema organizará tus respuestas para orientar la revisión.</p>
+      <p class="notice"><strong>Importante:</strong> esta herramienta es orientativa y no sustituye la revisión de un mecánico.</p>
+    </section>
+
+    <section id="question-panel" class="panel" aria-live="polite">
+      <div class="progress-row">
+        <span id="step-label">Pregunta 1 de 4</span>
+        <span id="progress-percent">25%</span>
+      </div>
+      <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+
+      <div id="question-area">
+        <p class="eyebrow" id="question-category">PARA EMPEZAR</p>
+        <h2 id="question-title">¿Qué tipo de automóvil tienes?</h2>
+        <p id="question-help" class="muted">Por ahora, esta versión está diseñada para automóviles de gasolina.</p>
+        <div id="options" class="options"></div>
+      </div>
+
+      <div id="warning" class="warning hidden" role="alert"></div>
+      <p id="error-message" class="error hidden">Selecciona una respuesta para continuar.</p>
+
+      <div class="actions">
+        <button id="back-button" class="button secondary" type="button" disabled>Regresar</button>
+        <button id="next-button" class="button primary" type="button">Continuar</button>
+      </div>
+    </section>
+
+    <section id="summary" class="panel hidden">
+      <p class="eyebrow">RESUMEN</p>
+      <h2>Respuestas recibidas por el backend</h2>
+      
+<p class="muted">
+  Tus respuestas fueron recibidas y procesadas
+  por el servidor. Tus respuestas fueron analizadas mediante nuestro sistema experto desarrollado en Prolog. A continuación se muestran las posibles causas identificadas. Los resultados son orientativos y no sustituyen una revisión mecánica profesional.
+</p>
+      <div id="server-status" class="status" role="status">Enviando respuestas...</div>
+      <ul id="answers-list" class="answers-list"></ul>
+      <div class="actions">
+        <button id="restart-button" class="button secondary" type="button">Empezar de nuevo</button>
+        <button id="copy-button" class="button primary" type="button">Copiar resumen</button>
+      </div>
+      <p id="copy-status" class="muted" role="status"></p>
+    </section>
+
+    <footer>
+      <p>Proyecto académico · Diagnóstico orientativo · No confirma averías</p>
+    </footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
