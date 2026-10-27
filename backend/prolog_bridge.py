@@ -193,61 +193,29 @@ def enviar_respuestas_prolog(respuestas):
         }
 
 
+
 def obtener_fallas_posibles():
-    """Consulta las fallas definidas en diagnostico.pl."""
+    """
+    Obtiene las posibles causas del caso de prueba
+    utilizando las reglas existentes en Prolog.
+    """
 
-    ejecutable = shutil.which("swipl")
+    respuestas = {
+        "tipo_auto": "gasolina",
+        "problema": "no_arranca",
+        "detalle": "gira_no_enciende"
+    }
 
-    if ejecutable is None:
-        return {
-            "estado": "error",
-            "mensaje": "No se encontro SWI-Prolog."
-        }
+    resultado = consultar_diagnostico_dinamico(respuestas)
 
-    if not ARCHIVO_PROLOG.is_file():
-        return {
-            "estado": "error",
-            "mensaje": "No existe diagnostico.pl."
-        }
+    if resultado["estado"] != "ok":
+        return resultado
 
-    try:
-        resultado = subprocess.run(
-            [
-                ejecutable,
-                "-q",
-                "-s", str(ARCHIVO_PROLOG),
-                "-g",
-                "forall(falla_posible(X), writeln(X))",
-                "-t", "halt"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        if resultado.returncode != 0:
-            return {
-                "estado": "error",
-                "mensaje": resultado.stderr.strip()
-            }
-
-        fallas = [
-            linea.strip()
-            for linea in resultado.stdout.splitlines()
-            if linea.strip()
-        ]
-
-        return {
-            "estado": "ok",
-            "fallas": fallas,
-            "cantidad": len(fallas)
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {
-            "estado": "error",
-            "mensaje": str(error)
-        }
+    return {
+        "estado": "ok",
+        "fallas": resultado["causas"],
+        "cantidad": resultado["cantidad"]
+    }
 
 
 def consultar_diagnostico_dinamico(respuestas):
