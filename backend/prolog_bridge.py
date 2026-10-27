@@ -1,306 +1,152 @@
-
-import subprocess
+import json
+import re
 import shutil
+import subprocess
 from pathlib import Path
 
-# Ubicacion del proyecto
 CARPETA_PROYECTO = Path(__file__).resolve().parent.parent
+ARCHIVO_PROLOG = CARPETA_PROYECTO / 'prolog' / 'diagnostico.pl'
+ATOMO = re.compile(r'[a-z][a-z0-9_]*\Z')
 
-# Archivo de Prolog
-ARCHIVO_PROLOG = CARPETA_PROYECTO / "prolog" / "diagnostico.pl"
+
+def _ejecutar(objetivo):
+    ejecutable = shutil.which('swipl')
+    if not ejecutable:
+        return {'estado': 'error', 'mensaje': 'No se encontro SWI-Prolog.'}
+    if not ARCHIVO_PROLOG.is_file():
+        return {'estado': 'error', 'mensaje': 'No existe diagnostico.pl.'}
+    try:
+        resultado = subprocess.run(
+            [ejecutable, '-q', '-s', str(ARCHIVO_PROLOG), '-g', objetivo, '-t', 'halt'],
+            capture_output=True, text=True, timeout=15, check=False, encoding='utf-8', errors='replace'
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        return {'estado': 'error', 'mensaje': str(error)}
+    if resultado.returncode != 0:
+        return {'estado': 'error', 'mensaje': resultado.stderr.strip() or 'Error al consultar Prolog.'}
+    return {'estado': 'ok', 'salida': resultado.stdout}
 
 
 def verificar_prolog():
-    ejecutable = shutil.which("swipl")
-
-    if ejecutable is None:
-        return {
-            "estado": "error",
-            "mensaje": "No se encontro SWI-Prolog."
-        }
-
+    ejecutable = shutil.which('swipl')
+    if not ejecutable:
+        return {'estado': 'error', 'mensaje': 'No se encontro SWI-Prolog.'}
     try:
-        resultado = subprocess.run(
-            [ejecutable, "--version"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=True
-        )
-
-        return {
-            "estado": "ok",
-            "mensaje": "Python se comunico correctamente con SWI-Prolog.",
-            "version": resultado.stdout.strip(),
-            "archivo_prolog_existe": ARCHIVO_PROLOG.is_file()
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {
-            "estado": "error",
-            "mensaje": str(error)
-        }
+        resultado = subprocess.run([ejecutable, '--version'], capture_output=True, text=True, timeout=10, check=True)
+        return {'estado': 'ok', 'mensaje': 'Python se comunico correctamente con SWI-Prolog.',
+                'version': resultado.stdout.strip(), 'archivo_prolog_existe': ARCHIVO_PROLOG.is_file()}
+    except (OSError, subprocess.SubprocessError) as error:
+        return {'estado': 'error', 'mensaje': str(error)}
 
 
 def consultar_prolog():
-    ejecutable = shutil.which("swipl")
+    resultado = _ejecutar('estado_sistema(X),writeln(X)')
+    if resultado['estado'] != 'ok':
+        return resultado
+    return {'estado': 'ok', 'resultado': resultado['salida'].strip()}
 
-    if ejecutable is None:
-        return {
-            "estado": "error",
-            "mensaje": "No se encontro SWI-Prolog."
-        }
-
-    if not ARCHIVO_PROLOG.is_file():
-        return {
-            "estado": "error",
-            "mensaje": "No existe diagnostico.pl."
-        }
-
-    try:
-        resultado = subprocess.run(
-            [
-                ejecutable,
-                "-q",
-                "-s", str(ARCHIVO_PROLOG),
-                "-g", "estado_sistema(X), writeln(X)",
-                "-t", "halt"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        if resultado.returncode != 0:
-            return {
-                "estado": "error",
-                "mensaje": resultado.stderr.strip()
-            }
-
-        return {
-            "estado": "ok",
-            "resultado": resultado.stdout.strip()
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {
-            "estado": "error",
-            "mensaje": str(error)
-        }
 
 def consultar_varios():
-    ejecutable = shutil.which("swipl")
-
-    if ejecutable is None:
-        return {"estado": "error", "mensaje": "No se encontro SWI-Prolog."}
-
-    if not ARCHIVO_PROLOG.is_file():
-        return {"estado": "error", "mensaje": "No existe diagnostico.pl."}
-
-    try:
-        resultado = subprocess.run(
-            [
-                ejecutable,
-                "-q",
-                "-s", str(ARCHIVO_PROLOG),
-                "-g", "forall(color_prueba(X), writeln(X))",
-                "-t", "halt"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        if resultado.returncode != 0:
-            return {
-                "estado": "error",
-                "mensaje": resultado.stderr.strip()
-            }
-
-        soluciones = resultado.stdout.strip().splitlines()
-
-        return {
-            "estado": "ok",
-            "soluciones": soluciones
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {"estado": "error", "mensaje": str(error)}
+    resultado = _ejecutar('forall(color_prueba(X),writeln(X))')
+    if resultado['estado'] != 'ok':
+        return resultado
+    return {'estado': 'ok', 'soluciones': resultado['salida'].splitlines()}
 
 
+def _validar_atomos(respuestas, campos):
+    valores = []
+    for campo in campos:
+        valor = respuestas.get(campo)
+        if not isinstance(valor, str) or not ATOMO.fullmatch(valor):
+            return None
+        valores.append(valor)
+    return valores
 
-import json
 
 def enviar_respuestas_prolog(respuestas):
-    ejecutable = shutil.which("swipl")
-
-    if ejecutable is None:
-        return {
-            "estado": "error",
-            "mensaje": "No se encontro SWI-Prolog."
-        }
-
-    if not ARCHIVO_PROLOG.is_file():
-        return {
-            "estado": "error",
-            "mensaje": "No existe diagnostico.pl."
-        }
-
-    campos = [
-        "tipo_auto",
-        "transmision",
-        "problema",
-        "duracion"
-    ]
-
-    # Los valores ya fueron validados por Flask.
-    valores = [respuestas[campo] for campo in campos]
-
-    # Construimos la consulta con valores permitidos.
-    argumentos = ",".join(valores)
-
-    consulta = f"recibir_respuestas({argumentos})"
-
-    try:
-        resultado = subprocess.run(
-            [
-                ejecutable,
-                "-q",
-                "-s", str(ARCHIVO_PROLOG),
-                "-g", consulta,
-                "-t", "halt"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-
-        if resultado.returncode != 0:
-            return {
-                "estado": "error",
-                "mensaje": resultado.stderr.strip()
-            }
-
-        return {
-            "estado": "ok",
-            "datos_prolog": resultado.stdout.strip()
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {
-            "estado": "error",
-            "mensaje": str(error)
-        }
-
-
-
-def obtener_fallas_posibles():
-    """
-    Obtiene las posibles causas del caso de prueba
-    utilizando las reglas existentes en Prolog.
-    """
-
-    respuestas = {
-        "tipo_auto": "gasolina",
-        "problema": "no_arranca",
-        "detalle": "gira_no_enciende"
-    }
-
-    resultado = consultar_diagnostico_dinamico(respuestas)
-
-    if resultado["estado"] != "ok":
+    if not isinstance(respuestas, dict):
+        return {'estado': 'error', 'mensaje': 'Datos invalidos.'}
+    valores = _validar_atomos(respuestas, ('tipo_auto', 'transmision', 'problema', 'duracion'))
+    if valores is None:
+        return {'estado': 'error', 'mensaje': 'Las respuestas contienen valores invalidos.'}
+    resultado = _ejecutar('recibir_respuestas(' + ','.join(valores) + ')')
+    if resultado['estado'] != 'ok':
         return resultado
-
-    return {
-        "estado": "ok",
-        "fallas": resultado["causas"],
-        "cantidad": resultado["cantidad"]
-    }
+    return {'estado': 'ok', 'datos_prolog': resultado['salida'].strip()}
 
 
 def consultar_diagnostico_dinamico(respuestas):
-    """
-    Consulta las reglas de diagnostico usando los datos
-    recibidos desde Flask.
+    """Obtiene causas, explicaciones y recomendaciones desde SWI-Prolog."""
+    if not isinstance(respuestas, dict):
+        return {'estado': 'error', 'mensaje': 'Datos invalidos.'}
 
-    Requiere que diagnostico.pl tenga definido:
-    posible_causa/4
-    """
+    valores = _validar_atomos(respuestas, ('tipo_auto', 'problema', 'detalle'))
+    if valores is None:
+        return {'estado': 'error', 'mensaje': 'Las respuestas contienen valores invalidos.'}
 
-    ejecutable = shutil.which("swipl")
+    tipo, problema, detalle = valores
+    transmision = respuestas.get('transmision')
+    duracion = respuestas.get('duracion')
+    completo = transmision is not None and duracion is not None
 
-    if ejecutable is None:
-        return {
-            "estado": "error",
-            "mensaje": "No se encontro SWI-Prolog."
-        }
+    if completo:
+        adicionales = _validar_atomos(respuestas, ('transmision', 'duracion'))
+        if adicionales is None:
+            return {'estado': 'error', 'mensaje': 'Transmision o duracion invalidas.'}
+        transmision, duracion = adicionales
+        # Traduccion de las opciones de la interfaz al vocabulario de Prolog.
+        duracion = {'hoy': 'reciente', 'dias': 'unos_dias',
+                    'intermitente': 'continuo'}.get(duracion, duracion)
+        # "no_se" no es una duracion valida en el sistema experto.
+        if duracion == 'no_se' or transmision == 'no_se':
+            completo = False
+        else:
+            consulta = f'posible_causa_completa({tipo},{transmision},{problema},{detalle},{duracion},Causa)'
 
-    if not ARCHIVO_PROLOG.is_file():
-        return {
-            "estado": "error",
-            "mensaje": "No existe diagnostico.pl."
-        }
+    if not completo:
+        consulta = f'posible_causa({tipo},{problema},{detalle},Causa)'
 
-    tipo = respuestas.get("tipo_auto")
-    problema = respuestas.get("problema")
-    detalle = respuestas.get("detalle")
-
-    # Solo aceptamos atomos simples de Prolog.
-    import re
-
-    valores = (tipo, problema, detalle)
-
-    if not all(
-        isinstance(valor, str)
-        and re.fullmatch(r"[a-z][a-z0-9_]*", valor)
-        for valor in valores
-    ):
-        return {
-            "estado": "error",
-            "mensaje": "Las respuestas contienen valores invalidos."
-        }
-
+    # json_write_dict requiere una representacion JSON consistente.
+    # format('~q',...) no sirve: imprime terminos de Prolog, no JSON.
+    # json_write_dict/2 convierte atomos a cadenas JSON al usar width(0).
     objetivo = (
-        "forall("
-        f"posible_causa({tipo},{problema},{detalle},Causa),"
-        "writeln(Causa)"
-        ")"
+        'use_module(library(http/json)),'
+        'forall((' + consulta + '),('
+        f"(explicacion({problema},{detalle},Causa,Exp)->true;Exp=''),"
+        "(recomendacion(Causa,Rec)->true;Rec=''),"
+        'atom_string(Causa,CausaTexto),'
+        'atom_string(Exp,ExpTexto),'
+        'atom_string(Rec,RecTexto),'
+        'json_write_dict(current_output, '
+        'json{causa:CausaTexto,explicacion:ExpTexto,recomendacion:RecTexto}, [width(0)]),nl))'
     )
+    resultado = _ejecutar(objetivo)
+    if resultado['estado'] != 'ok':
+        return resultado
 
-    try:
-        resultado = subprocess.run(
-            [
-                ejecutable,
-                "-q",
-                "-s", str(ARCHIVO_PROLOG),
-                "-g", objetivo,
-                "-t", "halt"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+    diagnosticos = []
+    for linea in resultado['salida'].splitlines():
+        if not linea.strip():
+            continue
+        try:
+            dato = json.loads(linea)
+        except json.JSONDecodeError as error:
+            return {'estado': 'error', 'mensaje':
+                    f'Prolog devolvio texto no valido como JSON: {linea[:160]!r}. Detalle: {error}'}
+        if not isinstance(dato, dict) or not isinstance(dato.get('causa'), str):
+            return {'estado': 'error', 'mensaje': 'Prolog devolvio un diagnostico con formato inesperado.'}
+        diagnosticos.append(dato)
 
-        if resultado.returncode != 0:
-            return {
-                "estado": "error",
-                "mensaje": resultado.stderr.strip()
-            }
+    unicos = list({d['causa']: d for d in diagnosticos}.values())
+    return {'estado': 'ok', 'causas': [d['causa'] for d in unicos],
+            'cantidad': len(unicos), 'diagnosticos': unicos,
+            'modo': 'completo' if completo else 'basico'}
 
-        causas = [
-            linea.strip()
-            for linea in resultado.stdout.splitlines()
-            if linea.strip()
-        ]
 
-        return {
-            "estado": "ok",
-            "causas": causas,
-            "cantidad": len(causas)
-        }
-
-    except (subprocess.SubprocessError, OSError) as error:
-        return {
-            "estado": "error",
-            "mensaje": str(error)
-        }
+def obtener_fallas_posibles():
+    resultado = consultar_diagnostico_dinamico({
+        'tipo_auto': 'gasolina', 'problema': 'no_arranca', 'detalle': 'gira_no_enciende'
+    })
+    if resultado['estado'] != 'ok':
+        return resultado
+    return {'estado': 'ok', 'fallas': resultado['causas'], 'cantidad': resultado['cantidad']}

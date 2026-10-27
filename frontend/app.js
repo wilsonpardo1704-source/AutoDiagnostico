@@ -1,8 +1,8 @@
 
 /*
-  AutoDiagnóstico
-  Cuestionario dinámico conectado con Flask.
-  Consulta las reglas de SWI-Prolog a través de Flask.
+  AUTODIAGNÓSTICO
+  Cuestionario de 5 problemas automotrices.
+  Conectado con Flask y SWI-Prolog.
 */
 
 // ==========================================
@@ -14,7 +14,7 @@ const questions = [
     id: "tipo_auto",
     category: "PARA EMPEZAR",
     title: "¿Qué tipo de automóvil tienes?",
-    help: "Esta versión está diseñada para automóviles de gasolina.",
+    help: "Este sistema está diseñado para automóviles de gasolina.",
     options: [
       { value: "gasolina", label: "Automóvil de gasolina" },
       { value: "otro", label: "Diésel, híbrido o eléctrico" },
@@ -25,7 +25,7 @@ const questions = [
     id: "transmision",
     category: "TU AUTOMÓVIL",
     title: "¿Qué tipo de transmisión tiene?",
-    help: "Selecciona la opción que corresponda.",
+    help: "Selecciona la opción correspondiente.",
     options: [
       { value: "manual", label: "Manual (estándar)" },
       { value: "automatica", label: "Automática" },
@@ -36,30 +36,20 @@ const questions = [
     id: "problema",
     category: "SÍNTOMA PRINCIPAL",
     title: "¿Cuál es el problema principal que has notado?",
-    help: "Elige el síntoma que mejor describa lo que sucede.",
+    help: "Selecciona el problema que mejor describa la situación.",
     options: [
       { value: "no_arranca", label: "El automóvil no arranca" },
       { value: "pierde_potencia", label: "El motor pierde fuerza" },
       { value: "temperatura", label: "El motor se calienta demasiado" },
       { value: "ruido", label: "Escucho un ruido inusual" },
-      { value: "frenos", label: "Vibra al frenar o falla el pedal del freno" },
-      { value: "humo", label: "Sale humo por el escape" },
-      { value: "consumo", label: "Consume demasiada gasolina" },
-      { value: "check_engine", label: "Se encendió Check Engine" },
-      { value: "cambios", label: "Tengo problemas al cambiar de velocidad" },
-      { value: "olor_gasolina", label: "Huele mucho a gasolina" },
-      { value: "vibracion", label: "El motor tiembla cuando está detenido" },
-      { value: "fuga", label: "Veo una mancha debajo del automóvil" },
-      { value: "direccion", label: "El automóvil se jala hacia un lado" },
-      { value: "clutch", label: "El motor se revoluciona, pero el auto no avanza bien" },
-      { value: "otro", label: "Otro problema / no estoy seguro" }
+      { value: "frenos", label: "Tengo problemas con los frenos" }
     ]
   },
   {
     id: "duracion",
     category: "DETALLES",
     title: "¿Cuándo comenzó el problema?",
-    help: "Indica cuándo comenzaste a notar el problema.",
+    help: "Indica cuándo empezaste a notarlo.",
     options: [
       { value: "hoy", label: "Hoy, de repente" },
       { value: "dias", label: "Hace unos días" },
@@ -71,7 +61,7 @@ const questions = [
 ];
 
 // ==========================================
-// 2. PREGUNTAS ESPECIFICAS
+// 2. PREGUNTAS ESPECÍFICAS
 // ==========================================
 
 const preguntasEspecificas = {
@@ -103,7 +93,7 @@ const preguntasEspecificas = {
     title: "¿Qué observas en el indicador de temperatura?",
     options: [
       { value: "muy_alta", label: "La temperatura está muy alta" },
-      { value: "variable", label: "Sube y baja" },
+      { value: "variable", label: "La temperatura sube y baja" },
       { value: "normal", label: "Parece normal" },
       { value: "sin_indicador", label: "Mi automóvil no tiene indicador" },
       { value: "no_se", label: "No estoy seguro" }
@@ -132,116 +122,6 @@ const preguntasEspecificas = {
       { value: "vibra_volante", label: "Vibra el volante al frenar" },
       { value: "no_se", label: "No estoy seguro" }
     ]
-  },
-
-  humo: {
-    id: "detalle",
-    title: "¿De qué color es el humo del escape?",
-    options: [
-      { value: "azul", label: "Azul" },
-      { value: "blanco_espeso", label: "Blanco espeso y constante" },
-      { value: "negro", label: "Negro" },
-      { value: "blanco_breve", label: "Blanco ligero que desaparece" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  consumo: {
-    id: "detalle",
-    title: "¿Qué has notado sobre el consumo de gasolina?",
-    options: [
-      { value: "mucho", label: "Gasta mucho más que antes" },
-      { value: "humo_negro", label: "Gasta más y sale humo negro" },
-      { value: "normal", label: "Parece normal" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  check_engine: {
-    id: "detalle",
-    title: "¿Cómo aparece la luz Check Engine?",
-    options: [
-      { value: "fija", label: "Permanece encendida" },
-      { value: "parpadea", label: "Parpadea" },
-      { value: "se_apago", label: "Se encendió y después se apagó" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  cambios: {
-    id: "detalle",
-    title: "¿Qué sucede al cambiar de velocidad?",
-    options: [
-      { value: "raspa", label: "Se escucha un rechinido" },
-      { value: "dura", label: "La palanca está muy dura" },
-      { value: "en_frio", label: "Solo ocurre con el motor frío" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  olor_gasolina: {
-    id: "detalle",
-    title: "¿Dónde percibes el olor a gasolina?",
-    options: [
-      { value: "interior", label: "Dentro del automóvil" },
-      { value: "exterior", label: "Fuera del automóvil" },
-      { value: "al_cargar", label: "Solo al cargar gasolina" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  vibracion: {
-    id: "detalle",
-    title: "¿Qué sucede cuando el automóvil está detenido?",
-    options: [
-      { value: "tiembla", label: "El motor tiembla" },
-      { value: "enciende_apaga", label: "El motor se apaga solo" },
-      { value: "rpm_variable", label: "Las revoluciones suben y bajan" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  fuga: {
-    id: "detalle",
-    title: "¿Cómo es la mancha debajo del automóvil?",
-    options: [
-      { value: "verde_rosa", label: "Verde o rosa" },
-      { value: "negra", label: "Negra y aceitosa" },
-      { value: "clara_roja", label: "Transparente o rojiza" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  direccion: {
-    id: "detalle",
-    title: "¿Qué has notado al conducir en línea recta?",
-    options: [
-      { value: "izquierda", label: "Tiende a irse a la izquierda" },
-      { value: "derecha", label: "Tiende a irse a la derecha" },
-      { value: "vibracion", label: "El volante vibra" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  clutch: {
-    id: "detalle",
-    title: "¿Qué has notado al utilizar el embrague?",
-    options: [
-      { value: "patina", label: "El motor acelera, pero el auto avanza poco" },
-      { value: "olor", label: "Hay olor a quemado" },
-      { value: "dificultad", label: "Es difícil cambiar de velocidad" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
-  },
-
-  otro: {
-    id: "detalle",
-    title: "¿Puedes identificar algún síntoma?",
-    options: [
-      { value: "varios", label: "Tengo varios síntomas" },
-      { value: "ninguno", label: "Ninguna opción describe el problema" },
-      { value: "no_se", label: "No estoy seguro" }
-    ]
   }
 };
 
@@ -252,6 +132,7 @@ const preguntasEspecificas = {
 let currentIndex = 0;
 const answers = {};
 let ultimasCausas = [];
+let ultimosDiagnosticos = [];
 
 const stepLabel = document.getElementById("step-label");
 const progressPercent = document.getElementById("progress-percent");
@@ -353,7 +234,7 @@ function renderQuestion() {
 }
 
 // ==========================================
-// 6. OBTENER RESPUESTA SELECCIONADA
+// 6. OBTENER RESPUESTA
 // ==========================================
 
 function getSelectedValue() {
@@ -374,23 +255,11 @@ function showSafetyWarning() {
       "Seguridad: si los frenos no funcionan correctamente, " +
       "no conduzcas el automóvil y solicita asistencia.";
 
-  } else if (problema === "olor_gasolina") {
-    mensaje =
-      "Seguridad: si el olor a gasolina es fuerte, " +
-      "detente en un lugar seguro, apaga el motor " +
-      "y evita llamas o chispas.";
-
   } else if (problema === "temperatura") {
     mensaje =
-      "Seguridad: si la temperatura está en zona roja " +
+      "Seguridad: si la temperatura está muy alta " +
       "o sale vapor, detente en un lugar seguro y apaga " +
       "el motor. No abras el sistema mientras esté caliente.";
-
-  } else if (problema === "humo") {
-    mensaje =
-      "Seguridad: si hay humo abundante, olor a quemado " +
-      "o señales de fuego, detente de forma segura " +
-      "y solicita ayuda.";
   }
 
   if (mensaje) {
@@ -402,7 +271,7 @@ function showSafetyWarning() {
 }
 
 // ==========================================
-// 8. BOTON CONTINUAR
+// 8. BOTÓN CONTINUAR
 // ==========================================
 
 nextButton.addEventListener("click", async () => {
@@ -414,26 +283,12 @@ nextButton.addEventListener("click", async () => {
     return;
   }
 
-  // Solo se admiten automóviles de gasolina
+  // Esta versión solo admite gasolina.
   if (question.id === "tipo_auto" && selected !== "gasolina") {
     warning.textContent =
       "Por ahora, el sistema está diseñado únicamente " +
-      "para automóviles de gasolina. Si no estás seguro " +
-      "del tipo de motor, consulta el manual del vehículo.";
-
-    warning.classList.remove("hidden");
-    return;
-  }
-
-  // El clutch solo corresponde a transmisión manual
-  if (
-    question.id === "problema" &&
-    selected === "clutch" &&
-    answers.transmision !== "manual"
-  ) {
-    warning.textContent =
-      "Este apartado corresponde a automóviles " +
-      "con transmisión manual. Selecciona otro problema.";
+      "para automóviles de gasolina. Consulta el manual " +
+      "si no conoces el tipo de motor.";
 
     warning.classList.remove("hidden");
     return;
@@ -442,6 +297,7 @@ nextButton.addEventListener("click", async () => {
   answers[question.id] = selected;
   errorMessage.classList.add("hidden");
 
+  // Agregar la pregunta específica del problema.
   if (question.id === "problema") {
     delete answers.detalle;
     actualizarPreguntas();
@@ -456,7 +312,7 @@ nextButton.addEventListener("click", async () => {
 });
 
 // ==========================================
-// 9. BOTON REGRESAR
+// 9. BOTÓN REGRESAR
 // ==========================================
 
 backButton.addEventListener("click", () => {
@@ -473,7 +329,7 @@ backButton.addEventListener("click", () => {
 });
 
 // ==========================================
-// 10. OBTENER ETIQUETAS
+// 10. OBTENER ETIQUETAS DE RESPUESTAS
 // ==========================================
 
 function getAnswerLabel(questionId, value) {
@@ -496,8 +352,8 @@ function getAnswerLabel(questionId, value) {
 // 11. ETIQUETAS DE RESULTADOS PROLOG
 // ==========================================
 
-// Solo cambia la presentación del texto.
-// Las causas se obtienen de las reglas Prolog.
+// Solo cambia la presentación de los resultados.
+// Las causas son calculadas por las reglas Prolog.
 
 const etiquetasCausas = {
   alimentacion_combustible:
@@ -507,14 +363,17 @@ const etiquetasCausas = {
     "Posible problema del sistema de encendido",
 
   bateria_conexiones_electricas:
-    "Posible problema de batería o conexiones eléctricas"
+    "Posible problema de batería o conexiones eléctricas",
+
+  filtro_aire_obstruido:
+    "Posible filtro de aire obstruido"
 };
 
 // ==========================================
-// 12. MOSTRAR HIPOTESIS
+// 12. MOSTRAR HIPÓTESIS
 // ==========================================
 
-function mostrarHipotesis(causas) {
+function mostrarHipotesis(causas, diagnosticos = []) {
   const list = document.getElementById("answers-list");
   let contenedor = document.getElementById("prolog-resultados");
 
@@ -522,6 +381,7 @@ function mostrarHipotesis(causas) {
     contenedor = document.createElement("section");
     contenedor.id = "prolog-resultados";
     contenedor.style.marginTop = "24px";
+
     list.insertAdjacentElement("afterend", contenedor);
   }
 
@@ -534,13 +394,16 @@ function mostrarHipotesis(causas) {
   const aviso = document.createElement("p");
   aviso.textContent =
     "Estas son hipótesis orientativas, no un diagnóstico confirmado.";
+
   contenedor.appendChild(aviso);
 
   if (!causas.length) {
     const mensaje = document.createElement("p");
+
     mensaje.textContent =
-      "Todavía no hay reglas disponibles para esta combinación de respuestas. " +
-      "No es posible determinar una causa con la información actual.";
+      "Todavía no hay reglas disponibles para esta " +
+      "combinación de respuestas. No es posible determinar " +
+      "una causa con la información actual.";
 
     contenedor.appendChild(mensaje);
     return;
@@ -550,10 +413,21 @@ function mostrarHipotesis(causas) {
 
   causas.forEach(causa => {
     const item = document.createElement("li");
+    const nombre = document.createElement("strong");
+    nombre.textContent = etiquetasCausas[causa] || causa.replaceAll("_", " ");
+    item.appendChild(nombre);
 
-    item.textContent =
-      etiquetasCausas[causa] || causa.replaceAll("_", " ");
-
+    const diagnostico = diagnosticos.find(d => d.causa === causa);
+    if (diagnostico?.explicacion) {
+      const explicacion = document.createElement("p");
+      explicacion.textContent = "Explicación: " + diagnostico.explicacion.replaceAll("_", " ");
+      item.appendChild(explicacion);
+    }
+    if (diagnostico?.recomendacion) {
+      const recomendacion = document.createElement("p");
+      recomendacion.textContent = "Recomendación: " + diagnostico.recomendacion;
+      item.appendChild(recomendacion);
+    }
     lista.appendChild(item);
   });
 
@@ -581,9 +455,10 @@ async function sendAnswersToBackend() {
   document.getElementById("prolog-resultados")?.remove();
 
   ultimasCausas = [];
+  ultimosDiagnosticos = [];
 
   try {
-    // Primero enviar las respuestas completas a Flask
+    // Primera petición: enviar todas las respuestas.
     const response = await fetch("/api/respuestas", {
       method: "POST",
       headers: {
@@ -604,7 +479,7 @@ async function sendAnswersToBackend() {
       );
     }
 
-    // Mostrar las respuestas en orden
+    // Mostrar resumen del cuestionario.
     questions.forEach(pregunta => {
       const value = data.respuestas[pregunta.id];
 
@@ -627,7 +502,7 @@ async function sendAnswersToBackend() {
       list.appendChild(item);
     });
 
-    // Mostrar advertencias de seguridad
+    // Mostrar advertencias del backend.
     if (data.advertencia) {
       const item = document.createElement("li");
 
@@ -637,7 +512,7 @@ async function sendAnswersToBackend() {
       list.appendChild(item);
     }
 
-    // Consultar las reglas dinámicas en SWI-Prolog
+    // Segunda petición: consultar reglas de Prolog.
     status.textContent =
       "Respuestas recibidas. Consultando reglas de Prolog...";
 
@@ -650,8 +525,10 @@ async function sendAnswersToBackend() {
         },
         body: JSON.stringify({
           tipo_auto: answers.tipo_auto,
+          transmision: answers.transmision,
           problema: answers.problema,
-          detalle: answers.detalle
+          detalle: answers.detalle,
+          duracion: answers.duracion
         })
       }
     );
@@ -666,16 +543,23 @@ async function sendAnswersToBackend() {
       );
     }
 
-    // Guardar las hipótesis obtenidas
     ultimasCausas = Array.isArray(diagnostico.causas)
       ? diagnostico.causas
       : [];
 
-    // Mostrar los resultados en la página
-    mostrarHipotesis(ultimasCausas);
+    ultimosDiagnosticos = Array.isArray(diagnostico.diagnosticos)
+      ? diagnostico.diagnosticos
+      : [];
+    mostrarHipotesis(ultimasCausas, ultimosDiagnosticos);
 
     status.textContent =
       `Consulta completada: ${ultimasCausas.length} hipótesis encontradas.`;
+    if (answers.duracion === "intermitente") {
+      status.textContent += " Nota: el backend interpreta provisionalmente 'intermitente' como 'continuo'.";
+    }
+    if (diagnostico.modo === "basico") {
+      status.textContent += " Se utilizó el diagnóstico básico.";
+    }
 
   } catch (error) {
     status.className = "status failure";
@@ -690,7 +574,7 @@ async function sendAnswersToBackend() {
 }
 
 // ==========================================
-// 14. BOTON EMPEZAR DE NUEVO
+// 14. BOTÓN EMPEZAR DE NUEVO
 // ==========================================
 
 document.getElementById("restart-button").addEventListener(
@@ -711,13 +595,14 @@ document.getElementById("restart-button").addEventListener(
     document.getElementById("prolog-resultados")?.remove();
 
     ultimasCausas = [];
+    ultimosDiagnosticos = [];
 
     renderQuestion();
   }
 );
 
 // ==========================================
-// 15. BOTON COPIAR RESUMEN
+// 15. BOTÓN COPIAR RESUMEN
 // ==========================================
 
 document.getElementById("copy-button").addEventListener(
@@ -740,13 +625,23 @@ document.getElementById("copy-button").addEventListener(
           ultimasCausas
             .map(
               causa =>
-                "- " + (etiquetasCausas[causa] || causa)
+                "- " + (
+                  etiquetasCausas[causa] ||
+                  causa.replaceAll("_", " ")
+                )
             )
             .join("\n")
         : "\n\nSin hipótesis disponibles para este caso.";
 
+      const textoDetalles = ultimosDiagnosticos.map(d =>
+        [d.causa.replaceAll("_", " "),
+         d.explicacion ? "Explicación: " + d.explicacion.replaceAll("_", " ") : "",
+         d.recomendacion ? "Recomendación: " + d.recomendacion : ""]
+          .filter(Boolean).join("\n")
+      ).join("\n\n");
       await navigator.clipboard.writeText(
-        lines.join("\n\n") + textoCausas
+        lines.join("\n\n") + textoCausas +
+        (textoDetalles ? "\n\nDetalles del diagnóstico:\n" + textoDetalles : "")
       );
 
       document.getElementById("copy-status").textContent =
